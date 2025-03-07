@@ -13,7 +13,7 @@ typedef enum Color{
 	MAGENTA,
 	CYAN,
 	WHITE
-}Color; 
+}Color;
 
 typedef struct GameState{
 	Color* map;
