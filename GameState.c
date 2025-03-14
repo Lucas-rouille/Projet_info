@@ -1,4 +1,3 @@
-
 #include "../head/GameState.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -104,18 +103,6 @@ void miseajour_map(GameState* map,Color car, Color car2){// fonction qui met à 
     }
 }
  
-Color* cases_disponibles(GameState* map, Color joueur){
-    Color* territoire =(Color*) malloc(9 * sizeof(Color));
-    for (int i=0; i< size; i++){
-        for (int k=0; k<size; k++){
-            if (estunecasevoisine(map, i, k, joueur)==true){
-                Color lettre = map->map[i*size+k];
-                territoire[lettre]+=1;
-            }
-        }
-    }
-    return (territoire);
-}
  
 bool verifie(GameState*map){//fonction qui renvoie true si la partie est finie (un joueur possède plus de 50% de la map)
     int compteur1=0;
@@ -155,24 +142,6 @@ Color lettre_couleur(char letter) {
     }
 }
  
-const char* couleurverslettre(Color couleur) {
-    switch (couleur) {
-        case ERROR: return "ERROR";
-        case EMPTY: return "Rouge";
-        case PLAYER_1: return "Bleu";
-        case PLAYER_2: return "Vert";
-        case RED: return "Jaune";
-        case GREEN: return "Magenta";
-        case BLUE: return "Cyan";
-        case YELLOW: return "Blanc";
-        case MAGENTA: return "Blanc";
-        case CYAN: return "Noir";
-        case WHITE: return "EMPTY";
-        default: return "UNKNOWN_COLOR";
-    }
-}
- 
- 
 void print_map(GameState* state) {
     if (state->map == NULL) {
         printf("[ERROR] Carte non initialisée\n");
@@ -198,7 +167,7 @@ void print_map(GameState* state) {
         for (int j = 0; j < state->size; j++) {
             Color color = get_map_value(state, j, i);
             if (color >= 0 && color < 9) {
-                printf("%s%c\x1B[0m ", colors[color], lettres[color]); // Ajout des couleurs
+                printf("%s%c\x1B[0m", colors[color], lettres[color]); // Ajout des couleurs
             } else {
                 printf("?");
             }
@@ -229,14 +198,6 @@ void init_players(GameState* state, Player* player1, Player* player2) {
     set_map_value(state, player2->x, player2->y, player2->symbol);
 }
  
-Color aleatoire(GameState* map, Color joueur){
-    int valeur_aleatoire = rand() % 7;
-    return((Color)valeur_aleatoire);
-}
- 
-//Color glouton(GameState*map, Color joueur{
- 
-//})
  
 int main(int argc, char** argv) {
     srand(time(NULL));
@@ -245,7 +206,9 @@ int main(int argc, char** argv) {
     Player player1;
     Player player2;
     char Coup1;
+    char Coup2;
     int Tour = 1;
+ 
  
     create_empty_game_state(&game, size);
     fill_map(&game);
@@ -261,8 +224,9 @@ int main(int argc, char** argv) {
  
         if (verifie(&game)) break;
  
-        Color couleur_choisie2 = aleatoire(&game, (Color)8);
-        printf("Le joueur aléatoire a choisi la couleur %s\n", couleurverslettre(couleur_choisie2));
+        printf("Tour %d - Joueur 2 : Choisi une lettre (A, B, C, D, E, F, G):\n", Tour);
+        scanf(" %c", &Coup2);  
+        Color couleur_choisie2 = lettre_couleur(Coup2);
         miseajour_map(&game, (Color)8, couleur_choisie2);  // Mettre à jour  carte selon le choix
         print_map(&game);  // Afficher carte après le choix du joueur 2
  
@@ -274,4 +238,3 @@ int main(int argc, char** argv) {
  
     return 0;
 }
- 
