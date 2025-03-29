@@ -57,6 +57,19 @@ void fill_map(GameState* map) {
     map->map[0 * map->size + (size - 1)] = (Color)2; // Coin haut droit ('v')
 }
 
+GameState* copie_map(GameState* map) {//fonction qui crée une copie de la map 
+    int size = map->size;
+    GameState* copie = (GameState*)malloc(sizeof(GameState));
+    copie->size = map->size;
+    copie->map = (Color*)malloc(copie->size * copie->size * sizeof(Color));
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            copie->map[i * copie->size + j] = map->map[i * map->size + j];
+        }
+    }
+    return copie;
+}
+
 bool estunecasevoisine(GameState*map, int i, int k, Color car){//fonction qui retourne true si la case de coordonnée i,k possède un voisin de valeur car
     int size = map->size;
     if (i==size -1 && k!= 0 && k!= size-1){// si on se trouve sur la dernière ligne (coins exclus)
@@ -102,6 +115,28 @@ void miseajour_map(GameState* map,Color car, Color car2){// fonction qui met à 
             }
         }
     }
+}
+
+int compte_nombrecasesvoisines(GameState*map, Color joueur){
+    int size = map-> size;
+    int nb_voisins = 0;
+    GameState* copie = copie_map(map);
+    for (int i=0; i<size; i++){
+        for (int k = 0; k<size; k++){
+            copie-> map[i*size+k]=0;
+        }
+    }
+    for (int i=0; i<size;i++){
+        for (int k=0; k<size; k++){
+            if (estunecasevoisine(map, i, k, joueur)== true ){
+                if (copie->map[i*size +k]==0){
+                    nb_voisins+=1;
+                    copie-> map[i*size +k]=1;
+                }
+            }
+        }
+    }
+    return nb_voisins;
 }
 
 Color* cases_disponibles(GameState* map, Color joueur){//fonction qui renvoie un tableau des couleurs disponibles et leur nombre d'apparition
@@ -155,19 +190,6 @@ bool verifie(GameState*map){//fonction qui renvoie true si la partie est finie (
     return(compteur1>= moitie || compteur2>= moitie);
 }
 
-GameState* copie_map(GameState* map) {//fonction qui crée une copie de la map 
-    int size = map->size;
-    GameState* copie = (GameState*)malloc(sizeof(GameState));
-    copie->size = map->size;
-    copie->map = (Color*)malloc(copie->size * copie->size * sizeof(Color));
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            copie->map[i * copie->size + j] = map->map[i * map->size + j];
-        }
-    }
-    return copie;
-}
-
 int compte_territoire(GameState* map, Color joueur){
     int size = map->size;
     int compteur =0;
@@ -206,7 +228,7 @@ Color hegemonique(GameState* map, Color joueur){
     for (int i = 3; i < 10; i++) {
         GameState* copie = copie_map(map);
         miseajour_map(copie, joueur,(Color)i);
-        liste[i-3]=compte_frontieres(cases_disponibles(copie,joueur));
+        liste[i-3]= compte_nombrecasesvoisines(copie, joueur);
         free_game(copie);
         free(copie);
     }
@@ -219,6 +241,41 @@ Color hegemonique(GameState* map, Color joueur){
         }
     }
     return (Color)index;
+}
+
+Color mixte(GameState* map, Color joueur) {
+    int liste_frontieres[7] = {0, 0, 0, 0, 0, 0, 0};
+    int liste_glouton[7] = {0, 0, 0, 0, 0, 0, 0};
+    int max_frontieres = -1;
+    int max_glouton = -1;
+    int index_frontieres = -1;
+    int index_glouton = -1;
+    for (int i = 3; i < 10; i++) {
+        GameState* copie = copie_map(map);
+        miseajour_map(copie, joueur, (Color)i);
+        liste_frontieres[i-3] = compte_frontieres(cases_disponibles(copie, joueur));
+        liste_glouton[i - 3] = compte_territoire(copie, joueur);
+        free_game(copie);
+        free(copie);
+    }
+    for (int p = 0; p < 7; p++) {
+        if (liste_frontieres[p] > max_frontieres) {
+            max_frontieres = liste_frontieres[p];
+            index_frontieres = p + 3;
+        }
+    }
+    for (int p = 0; p < 7; p++) {
+        if (liste_glouton[p] > max_glouton) {
+            max_glouton = liste_glouton[p];
+            index_glouton = p + 3;
+        }
+    }
+    if (max_frontieres == 0) {// hegemonique ne marche plus donc on joue glouton
+        return (Color)index_glouton;
+    }
+    else{
+    return (Color)index_frontieres;
+    }
 }
 
 Color lettre_couleur(char letter) {
@@ -322,7 +379,6 @@ Color aleatoireglouton(GameState*map, Color joueur){
     return((Color)valeur_aleatoire);
 }
 
-
  Color gloutonintelligent(GameState*map, Color joueur){
     Color *disponibles = cases_disponibles(map, joueur);
     int max = 0;
@@ -338,7 +394,7 @@ Color aleatoireglouton(GameState*map, Color joueur){
     free(disponibles);
     return((Color)indice);
  }
- 
+
 int main(int argc, char** argv) {
     srand(time(NULL));
     GameState game;
