@@ -232,8 +232,8 @@ Color hegemonique(GameState* map, Color joueur){
         free_game(copie);
         free(copie);
     }
-    int max = liste[0];
-    int index = 3;
+    int max = -1;
+    int index = -1;
     for (int p=0; p<7; p++){
         if (liste[p]>max){
             max = liste[p];
@@ -270,8 +270,10 @@ Color mixte(GameState* map, Color joueur) {
             index_glouton = p + 3;
         }
     }
-    if (max_frontieres == 0) {// hegemonique ne marche plus donc on joue glouton
-        return (Color)index_glouton;
+    GameState*copie2 = copie_map(map);
+    miseajour_map(copie2, (Color)index_frontieres,joueur);
+    if (compte_territoire(copie2, joueur)==compte_territoire(map, joueur)){
+        return((Color)index_glouton);
     }
     else{
     return (Color)index_frontieres;
@@ -419,7 +421,7 @@ int main(int argc, char** argv) {
         if (verifie(&game)) break;
  
         Color couleur_choisie2 = mixte(&game, (Color)2);
-        printf("Le joueur hegemonique a choisi la lettre %s\n", couleurverslettre(couleur_choisie2));
+        printf("Le joueur mixte a choisi la lettre %s\n", couleurverslettre(couleur_choisie2));
         miseajour_map(&game, (Color)2, couleur_choisie2);  // Mettre à jour  carte selon le choix
         print_map(&game);  // Afficher carte après le choix du joueur 2
  
@@ -431,3 +433,5 @@ int main(int argc, char** argv) {
  
     return 0;
 }
+
+
